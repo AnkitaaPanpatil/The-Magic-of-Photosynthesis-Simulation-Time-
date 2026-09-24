@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photosynthesis Interactive Leaf Explorer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        leaf: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top center, #132e1b 0%, #08140c 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Glow effects */
+        .sun-glow {
+            filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.75));
+        }
+        .chloroplast-glow {
+            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.65));
+        }
+        .sugar-glow {
+            filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+        }
+        .oxygen-glow {
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.8));
+        }
+
+        /* Glassmorphism panel */
+        .glass-panel {
+            background: rgba(15, 33, 20, 0.72);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(74, 222, 128, 0.18);
+        }
+
+        /* Custom range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            height: 8px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4ade80;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
+            border: 2px solid #ffffff;
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Custom pulsating badge */
+        @keyframes pulseRing {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-subtle {
+            animation: pulseRing 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-100 p-2 sm:p-4 md:p-6 selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header & Equation Bar -->
+    <header class="max-w-7xl mx-auto w-full mb-3">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-3 bg-emerald-950/40 border border-emerald-500/20 rounded-2xl p-4 glass-panel">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <svg class="w-7 h-7 text-emerald-950" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-300 via-lime-200 to-amber-200 bg-clip-text text-transparent">
+                        Photosynthesis Interactive Lab
+                    </h1>
+                    <p class="text-xs sm:text-sm text-emerald-300/80 font-medium">
+                        Explore how plant leaves turn Sunlight, Water, and Carbon Dioxide into Sweet Energy!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Photosynthesis Equation Banner -->
+            <div class="flex items-center flex-wrap gap-2 text-xs sm:text-sm font-semibold bg-black/40 px-4 py-2 rounded-xl border border-emerald-500/30">
+                <span class="text-amber-300 flex items-center gap-1">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-sm shadow-amber-400"></span>
+                    Light
+                </span>
+                <span class="text-slate-400">+</span>
+                <span class="text-cyan-300 flex items-center gap-1">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>
+                    6H₂O
+                </span>
+                <span class="text-slate-400">+</span>
+                <span class="text-gray-300 flex items-center gap-1">
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block"></span>
+                    6CO₂
+                </span>
+                <span class="text-emerald-400 text-base font-bold">➔</span>
+                <span class="text-yellow-400 flex items-center gap-1 bg-yellow-950/40 px-2 py-0.5 rounded-md border border-yellow-500/30">
+                    C₆H₁₂O₆ (Glucose)
+                </span>
+                <span class="text-slate-400">+</span>
+                <span class="text-sky-300 flex items-center gap-1 bg-sky-950/40 px-2 py-0.5 rounded-md border border-sky-500/30">
+                    6O₂ (Oxygen)
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+
+        <!-- Left / Center Canvas Area (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col gap-3">
+            <div class="relative w-full aspect-[16/10] sm:aspect-[16/9] min-h-[380px] rounded-2xl overflow-hidden glass-panel border border-emerald-500/30 shadow-2xl flex flex-col justify-between">
+                
+                <!-- View Mode Selector & Sound Toggle Overlay -->
+                <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-auto">
+                    <div class="flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-xl border border-emerald-500/30 text-xs font-semibold">
+                        <button id="viewLeafBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-md transition-all">
+                            🍃 Leaf Cross-Section
+                        </button>
+                        <button id="viewChloroplastBtn" class="px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-900/60 transition-all">
+                            🔬 Chloroplast Zoom
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Sound Toggle -->
+                        <button id="soundToggleBtn" class="bg-black/60 backdrop-blur-md p-2 rounded-xl border border-emerald-500/30 text-emerald-300 hover:text-white hover:bg-emerald-900/60 transition-all flex items-center gap-1 text-xs font-semibold" title="Sound Toggle">
+                            <span id="soundIcon">🔊</span>
+                            <span class="hidden sm:inline">Sound</span>
+                        </button>
+                        <!-- Reset Stats -->
+                        <button id="resetStatsBtn" class="bg-black/60 backdrop-blur-md p-2 rounded-xl border border-emerald-500/30 text-emerald-300 hover:text-white hover:bg-emerald-900/60 transition-all text-xs font-semibold" title="Reset molecule counters">
+                            ↺ Reset Counts
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Interactive Canvas -->
+                <canvas id="simCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                <!-- Interactive Floating Hint -->
+                <div class="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between text-xs text-emerald-200/90 pointer-events-none bg-black/40 backdrop-blur-md px-3 py-2 rounded-xl border border-emerald-500/20">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-lime-400 animate-ping"></span>
+                        <span id="canvasHintText">Click & drag chloroplasts or adjust sunlight/water to boost production!</span>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-3 font-mono text-[11px]">
+                        <span class="text-amber-300">☀️ Photons</span>
+                        <span class="text-cyan-400">💧 H₂O</span>
+                        <span class="text-slate-300">☁️ CO₂</span>
+                        <span class="text-sky-300">🫧 O₂</span>
+                        <span class="text-yellow-300">🍬 Glucose</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Molecule Live Production Counters Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="bg-emerald-950/40 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-amber-300/80 font-medium">Photons Caught</div>
+                        <div id="statPhotons" class="text-lg font-extrabold text-amber-300">0</div>
+                    </div>
+                    <div class="text-2xl">☀️</div>
+                </div>
+                <div class="bg-emerald-950/40 border border-cyan-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-cyan-300/80 font-medium">Water (H₂O) Used</div>
+                        <div id="statWater" class="text-lg font-extrabold text-cyan-300">0</div>
+                    </div>
+                    <div class="text-2xl">💧</div>
+                </div>
+                <div class="bg-emerald-950/40 border border-sky-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-sky-300/80 font-medium">Oxygen (O₂) Released</div>
+                        <div id="statOxygen" class="text-lg font-extrabold text-sky-300">0</div>
+                    </div>
+                    <div class="text-2xl">🫧</div>
+                </div>
+                <div class="bg-emerald-950/40 border border-yellow-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-[11px] text-yellow-300/80 font-medium">Glucose (Sugar) Made</div>
+                        <div id="statGlucose" class="text-lg font-extrabold text-yellow-300">0</div>
+                    </div>
+                    <div class="text-2xl">🍬</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Controls & Educational Guide Area (4 cols) -->
+        <div class="lg:col-span-4 flex flex-col gap-3">
+            
+            <!-- Environment Controls -->
+            <div class="glass-panel p-4 rounded-2xl border border-emerald-500/30 shadow-xl flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+                    <h2 class="font-bold text-base text-emerald-200 flex items-center gap-2">
+                        <span>🎛️</span> Environmental Factors
+                    </h2>
+                    <span id="rateLabel" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-800 text-lime-200 font-bold">
+                        Optimal Rate
+                    </span>
+                </div>
+
+                <!-- Sun Intensity Slider -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <label for="sunSlider" class="flex items-center gap-1.5 text-amber-300">
+                            <span>☀️ Sunlight Intensity</span>
+                        </label>
+                        <span id="sunValue" class="text-amber-200 font-mono">80%</span>
+                    </div>
+                    <input id="sunSlider" type="range" min="0" max="100" value="80" class="w-full accent-amber-400">
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Night / Darkness</span>
+                        <span>Bright Daylight</span>
+                    </div>
+                </div>
+
+                <!-- Water Availability Slider -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <label for="waterSlider" class="flex items-center gap-1.5 text-cyan-300">
+                            <span>💧 Water Supply (Roots & Vein)</span>
+                        </label>
+                        <span id="waterValue" class="text-cyan-200 font-mono">75%</span>
+                    </div>
+                    <input id="waterSlider" type="range" min="10" max="100" value="75" class="w-full accent-cyan-400">
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Drought</span>
+                        <span>Plentiful Water</span>
+                    </div>
+                </div>
+
+                <!-- CO2 Level Slider -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <label for="co2Slider" class="flex items-center gap-1.5 text-slate-200">
+                            <span>☁️ Carbon Dioxide (CO₂) Air Level</span>
+                        </label>
+                        <span id="co2Value" class="text-slate-300 font-mono">70%</span>
+                    </div>
+                    <input id="co2Slider" type="range" min="10" max="100" value="70" class="w-full accent-slate-300">
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Depleted</span>
+                        <span>Rich Atmospheric CO₂</span>
+                    </div>
+                </div>
+
+                <!-- Fast Actions -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button id="burstSunBtn" class="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-900 font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-1">
+                        ⚡ Sunburst Pulse
+                    </button>
+                    <button id="nightToggleBtn" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-600/40 transition-all active:scale-95 flex items-center justify-center gap-1">
+                        🌙 Toggle Day/Night
+                    </button>
+                </div>
+            </div>
+
+            <!-- Educational Info Card / Anatomy Explainer -->
+            <div class="glass-panel p-4 rounded-2xl border border-emerald-500/30 shadow-xl flex flex-col gap-2.5 flex-1">
+                <h3 class="font-bold text-sm text-lime-300 flex items-center gap-2">
+                    <span>🌱</span> How Photosynthesis Works Here:
+                </h3>
+                
+                <div id="infoCardContent" class="space-y-2 text-xs leading-relaxed text-emerald-100/90">
+                    <!-- Dynamic Info injected via JS depending on view -->
+                    <div class="p-2.5 rounded-xl bg-emerald-900/30 border border-emerald-500/20">
+                        <strong class="text-amber-300">1. Light Ingestion:</strong> Photons radiate from the sun into palisade mesophyll cells packed with green chlorophyll.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20">
+                        <strong class="text-cyan-300">2. Water Delivery:</strong> Water ($H_2O$) travels up the leaf's central veins (xylem) from root soil.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900/40 border border-slate-500/20">
+                        <strong class="text-slate-300">3. Air Diffusion:</strong> $CO_2$ enters microscopic mouth-like pores beneath the leaf called <strong>Stomata</strong>.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-yellow-950/40 border border-yellow-500/20">
+                        <strong class="text-yellow-300">4. Life Yield:</strong> Inside chloroplasts, water splits releasing fresh <strong>$O_2$</strong> to the atmosphere, while hydrogen and $CO_2$ combine into sweet <strong>Glucose</strong> sugar for plant food!
+                    </div>
+                </div>
+
+                <!-- Mini Quiz / Interactive Prompt -->
+                <div class="mt-auto pt-2 border-t border-emerald-500/20 flex items-center justify-between text-[11px] text-emerald-300">
+                    <span class="flex items-center gap-1">
+                        <span>💡</span> Tap on any chloroplast in the view to see its internal factory!
+                    </span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Web Audio Synthesizer for rich interactive feedback without external dependencies
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playOxygenPop() {
+                if (this.muted) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const now = this.ctx.currentTime;
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } catch (e) { /* ignore sound errors */ }
+            }
+
+            playGlucoseChime() {
+                if (this.muted) return;
+                this.init();
+                try {
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, High C
+                    const now = this.ctx.currentTime;
+
+                    notes.forEach((freq, index) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const noteTime = now + (index * 0.06);
+
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, noteTime);
+
+                        gain.gain.setValueAtTime(0.06, noteTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.25);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start(noteTime);
+                        osc.stop(noteTime + 0.25);
+                    });
+                } catch (e) {}
+            }
+
+            playSunBurst() {
+                if (this.muted) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const now = this.ctx.currentTime;
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(440, now + 0.2);
+
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } catch (e) {}
+            }
+        }
+
+        const sound = new SoundFX();
+    </script>
+
+    <script>
+        // Core Simulation State
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const state = {
+            view: 'leaf', // 'leaf' or 'chloroplast'
+            sunlight: 80, // 0 - 100
+            water: 75,    // 10 - 100
+            co2: 70,      // 10 - 100
+            stats: {
+                photons: 0,
+                water: 0,
+                oxygen: 0,
+                glucose: 0
+            },
+            leafAnatomy: {
+                chloroplasts: [],
+                stomata: []
+            },
+            particles: {
+                photons: [],
+                waters: [],
+                co2s: [],
+                oxygens: [],
+                glucoses: []
+            },
+            chloroplastView: {
+                thylakoidRotation: 0,
+                reactionProgress: 0,
+                atpLevel: 60
+            },
+            lastFrameTime: 0,
+            burstTime: 0,
+            isNight: false,
+            preNightSun: 80
+        };
+
+        // Resize Canvas to device pixel ratio for crystal clear retina displays
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            initLeafStructure();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function initLeafStructure() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            state.leafAnatomy.chloroplasts = [];
+            state.leafAnatomy.stomata = [];
+
+            // Palisade Mesophyll Chloroplasts (upper layer, densely packed)
+            const palisadeCols = 8;
+            const palisadeRows = 2;
+            const startX = w * 0.12;
+            const endX = w * 0.88;
+            const colWidth = (endX - startX) / palisadeCols;
+            const palisadeStartY = h * 0.27;
+
+            for (let r = 0; r < palisadeRows; r++) {
+                for (let c = 0; c < palisadeCols; c++) {
+                    const cx = startX + (c + 0.5) * colWidth + (Math.sin(r + c) * 8);
+                    const cy = palisadeStartY + r * 42 + (Math.cos(c) * 4);
+                    state.leafAnatomy.chloroplasts.push({
+                        x: cx,
+                        y: cy,
+                        radiusX: 18,
+                        radiusY: 13,
+                        angle: (c % 2 === 0 ? 0.15 : -0.15),
+                        layer: 'palisade',
+                        energy: Math.random() * 50,
+                        activity: 0.8
+                    });
+                }
+            }
+
+            // Spongy Mesophyll Chloroplasts (scattered below with air pockets)
+            const spongyCount = 9;
+            for (let i = 0; i < spongyCount; i++) {
+                const cx = startX + (i / spongyCount) * (endX - startX) + 20;
+                const cy = h * 0.58 + (i % 2 === 0 ? -12 : 12);
+                state.leafAnatomy.chloroplasts.push({
+                    x: cx,
+                    y: cy,
+                    radiusX: 16,
+                    radiusY: 12,
+                    angle: Math.sin(i) * 0.4,
+                    layer: 'spongy',
+                    energy: Math.random() * 40,
+                    activity: 0.6
+                });
+            }
+
+            // Stomata (Lower epidermis breathing pores)
+            const stomataCount = 4;
+            for (let i = 0; i < stomataCount; i++) {
+                const sx = startX + (i + 0.5) * ((endX - startX) / stomataCount);
+                const sy = h * 0.82;
+                state.leafAnatomy.stomata.push({
+                    x: sx,
+                    y: sy,
+                    width: 22,
+                    height: 10,
+                    openAmount: 1.0
+                });
+            }
+        }
+
+        function spawnParticles() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            if (state.view === 'leaf') {
+                // 1. Photons streaming from Sun
+                if (state.sunlight > 5 && Math.random() < (state.sunlight / 100) * 0.65) {
+                    state.particles.photons.push({
+                        x: w * 0.1 + Math.random() * (w * 0.8),
+                        y: -10,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: 2.5 + (state.sunlight / 25),
+                        size: 3 + Math.random() * 2.5,
+                        life: 1.0
+                    });
+                }
+
+                // 2. Water (H2O) flowing from leaf stem/vein on the left
+                if (state.water > 10 && Math.random() < (state.water / 100) * 0.4) {
+                    state.particles.waters.push({
+                        x: w * 0.05,
+                        y: h * 0.5 + (Math.random() - 0.5) * 20,
+                        vx: 1.6 + Math.random() * 1.5,
+                        vy: (Math.random() - 0.5) * 1.2,
+                        targetChloroplast: Math.floor(Math.random() * state.leafAnatomy.chloroplasts.length),
+                        life: 1.0
+                    });
+                }
+
+                // 3. CO2 molecules entering through stomata pores at the bottom
+                if (state.co2 > 10 && Math.random() < (state.co2 / 100) * 0.35) {
+                    const stoma = state.leafAnatomy.stomata[Math.floor(Math.random() * state.leafAnatomy.stomata.length)];
+                    if (stoma) {
+                        state.particles.co2s.push({
+                            x: stoma.x + (Math.random() - 0.5) * 14,
+                            y: h + 10,
+                            vx: (Math.random() - 0.5) * 0.8,
+                            vy: -(1.2 + Math.random() * 1.2),
+                            targetChloroplast: Math.floor(Math.random() * state.leafAnatomy.chloroplasts.length),
+                            life: 1.0
+                        });
+                    }
+                }
+            } else {
+                // Chloroplast View particles
+                if (state.sunlight > 5 && Math.random() < 0.4) {
+                    state.particles.photons.push({
+                        x: w * 0.25 + (Math.random() - 0.5) * 100,
+                        y: 0,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: 3,
+                        size: 3.5,
+                        life: 1.0
+                    });
+                }
+                if (Math.random() < 0.25) {
+                    state.particles.waters.push({
+                        x: 0,
+                        y: h * 0.45 + (Math.random() - 0.5) * 80,
+                        vx: 2.2,
+                        vy: (Math.random() - 0.5) * 0.8,
+                        life: 1.0
+                    });
+                }
+                if (Math.random() < 0.25) {
+                    state.particles.co2s.push({
+                        x: w,
+                        y: h * 0.5 + (Math.random() - 0.5) * 80,
+                        vx: -2.0,
+                        vy: (Math.random() - 0.5) * 0.8,
+                        life: 1.0
+                    });
+                }
+            }
+        }
+
+        function updatePhysics() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            // Update Photons
+            for (let i = state.particles.photons.length - 1; i >= 0; i--) {
+                const p = state.particles.photons[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Check collision with chloroplasts in leaf view
+                if (state.view === 'leaf') {
+                    for (let c of state.leafAnatomy.chloroplasts) {
+                        const dx = p.x - c.x;
+                        const dy = p.y - c.y;
+                        if ((dx * dx) / (c.radiusX * c.radiusX) + (dy * dy) / (c.radiusY * c.radiusY) <= 1.2) {
+                            c.energy = Math.min(100, c.energy + 8);
+                            state.stats.photons++;
+                            p.life = 0; // absorbed
+                            break;
+                        }
+                    }
+                } else {
+                    // Thylakoid absorption in zoomed view
+                    if (p.x > w * 0.15 && p.x < w * 0.45 && p.y > h * 0.3 && p.y < h * 0.7) {
+                        state.stats.photons++;
+                        p.life = 0;
+                    }
+                }
+
+                if (p.y > h || p.life <= 0) {
+                    state.particles.photons.splice(i, 1);
+                }
+            }
+
+            // Update Water (H2O)
+            for (let i = state.particles.waters.length - 1; i >= 0; i--) {
+                const p = state.particles.waters[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (state.view === 'leaf') {
+                    const target = state.leafAnatomy.chloroplasts[p.targetChloroplast];
+                    if (target) {
+                        p.vx += (target.x - p.x) * 0.003;
+                        p.vy += (target.y - p.y) * 0.003;
+
+                        const dist = Math.hypot(p.x - target.x, p.y - target.y);
+                        if (dist < target.radiusX) {
+                            state.stats.water++;
+                            // Produce Oxygen bubble
+                            if (target.energy > 20 && Math.random() < 0.8) {
+                                produceOxygen(target.x, target.y);
+                                target.energy -= 10;
+                            }
+                            state.particles.waters.splice(i, 1);
+                            continue;
+                        }
+                    }
+                } else {
+                    // In chloroplast zoom: hits Thylakoid light reaction
+                    if (p.x > w * 0.25) {
+                        produceOxygen(p.x, p.y);
+                        state.stats.water++;
+                        state.particles.waters.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                if (p.x > w || p.x < -20 || p.y < -20 || p.y > h + 20) {
+                    state.particles.waters.splice(i, 1);
+                }
+            }
+
+            // Update Carbon Dioxide (CO2)
+            for (let i = state.particles.co2s.length - 1; i >= 0; i--) {
+                const p = state.particles.co2s[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (state.view === 'leaf') {
+                    const target = state.leafAnatomy.chloroplasts[p.targetChloroplast];
+                    if (target) {
+                        p.vx += (target.x - p.x) * 0.002;
+                        p.vy += (target.y - p.y) * 0.002;
+
+                        const dist = Math.hypot(p.x - target.x, p.y - target.y);
+                        if (dist < target.radiusX) {
+                            // Synthesize Glucose
+                            if (target.energy > 15) {
+                                produceGlucose(target.x, target.y);
+                                target.energy -= 12;
+                            }
+                            state.particles.co2s.splice(i, 1);
+                            continue;
+                        }
+                    }
+                } else {
+                    // In chloroplast zoom: hits Calvin Cycle
+                    if (p.x < w * 0.7) {
+                        produceGlucose(p.x, p.y);
+                        state.particles.co2s.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                if (p.y < 0 || p.x < 0 || p.x > w) {
+                    state.particles.co2s.splice(i, 1);
+                }
+            }
+
+            // Update Oxygen Bubbles (O2 float upward and out into air)
+            for (let i = state.particles.oxygens.length - 1; i >= 0; i--) {
+                const o = state.particles.oxygens[i];
+                o.x += o.vx + Math.sin(o.wobble) * 0.8;
+                o.y += o.vy;
+                o.wobble += 0.08;
+                o.life -= 0.005;
+
+                if (o.y < -20 || o.life <= 0) {
+                    state.particles.oxygens.splice(i, 1);
+                }
+            }
+
+            // Update Glucose Molecules (C6H12O6 sugars move towards phloem/energy storage)
+            for (let i = state.particles.glucoses.length - 1; i >= 0; i--) {
+                const g = state.particles.glucoses[i];
+                g.x += g.vx;
+                g.y += g.vy;
+                g.rotation += 0.03;
+                g.life -= 0.006;
+
+                if (g.x < 0 || g.y > h || g.life <= 0) {
+                    state.particles.glucoses.splice(i, 1);
+                }
+            }
+
+            // Natural dissipation / background chloroplast respiration
+            for (let c of state.leafAnatomy.chloroplasts) {
+                c.energy = Math.max(0, c.energy - 0.05);
+            }
+
+            // Chloroplast view cycle rotation
+            state.chloroplastView.thylakoidRotation += 0.015;
+            state.chloroplastView.reactionProgress = (state.chloroplastView.reactionProgress + 0.02) % (Math.PI * 2);
+
+            // Update Stats Display in DOM
+            document.getElementById('statPhotons').innerText = state.stats.photons.toLocaleString();
+            document.getElementById('statWater').innerText = state.stats.water.toLocaleString();
+            document.getElementById('statOxygen').innerText = state.stats.oxygen.toLocaleString();
+            document.getElementById('statGlucose').innerText = state.stats.glucose.toLocaleString();
+
+            // Production Rate feedback
+            const overallRate = Math.round((state.sunlight * 0.4) + (state.water * 0.3) + (state.co2 * 0.3));
+            const rateBadge = document.getElementById('rateLabel');
+            if (overallRate < 35) {
+                rateBadge.innerText = 'Dormant Rate';
+                rateBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-red-950/80 text-rose-300 font-bold border border-rose-500/30';
+            } else if (overallRate < 70) {
+                rateBadge.innerText = 'Moderate Rate';
+                rateBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 font-bold border border-amber-500/30';
+            } else {
+                rateBadge.innerText = 'Optimal Peak Rate';
+                rateBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-lime-300 font-bold border border-lime-500/30';
+            }
+        }
+
+        function produceOxygen(x, y) {
+            state.stats.oxygen++;
+            sound.playOxygenPop();
+            state.particles.oxygens.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: -(1.5 + Math.random() * 1.5),
+                radius: 6 + Math.random() * 3,
+                wobble: Math.random() * Math.PI * 2,
+                life: 1.0
+            });
+        }
+
+        function produceGlucose(x, y) {
+            state.stats.glucose++;
+            sound.playGlucoseChime();
+            state.particles.glucoses.push({
+                x: x,
+                y: y,
+                vx: -(1.2 + Math.random() * 1.2), // flows towards phloem vein transport
+                vy: (Math.random() - 0.5) * 1.0,
+                size: 8,
+                rotation: 0,
+                life: 1.0
+            });
+        }
+
+        function drawLeafView() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            // Sky & ambient lighting background
+            const sunFactor = state.sunlight / 100;
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+            skyGrad.addColorStop(0, `rgba(${Math.floor(15 + 130 * sunFactor)}, ${Math.floor(40 + 150 * sunFactor)}, ${Math.floor(60 + 60 * sunFactor)}, 0.4)`);
+            skyGrad.addColorStop(0.25, 'rgba(10, 25, 15, 0.9)');
+            skyGrad.addColorStop(1, 'rgba(6, 16, 10, 1)');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Radiant Sun in the upper right
+            if (state.sunlight > 0) {
+                const sunX = w * 0.88;
+                const sunY = h * 0.12;
+                const sunRadius = 24 + (sunFactor * 16);
+
+                ctx.save();
+                const sunGlow = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, sunRadius * 3);
+                sunGlow.addColorStop(0, `rgba(253, 224, 71, ${0.8 * sunFactor})`);
+                sunGlow.addColorStop(0.5, `rgba(234, 179, 8, ${0.3 * sunFactor})`);
+                sunGlow.addColorStop(1, 'rgba(234, 179, 8, 0)');
+                ctx.fillStyle = sunGlow;
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, sunRadius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, sunRadius * 0.75, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Leaf Cross-Section Base Layers
+            const leafTop = h * 0.22;
+            const leafBottom = h * 0.82;
+
+            // 1. Upper Waxy Cuticle & Epidermis
+            ctx.fillStyle = 'rgba(134, 239, 172, 0.25)';
+            ctx.fillRect(w * 0.08, leafTop, w * 0.84, 14);
+            ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(w * 0.08, leafTop, w * 0.84, 14);
+
+            // Upper Epidermis cells
+            const epiCellCount = 24;
+            const epiW = (w * 0.84) / epiCellCount;
+            for (let i = 0; i < epiCellCount; i++) {
+                ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+                ctx.fillRect(w * 0.08 + i * epiW, leafTop + 14, epiW - 2, 16);
+                ctx.strokeRect(w * 0.08 + i * epiW, leafTop + 14, epiW - 2, 16);
+            }
+
+            // 2. Leaf Interior (Mesophyll chamber background)
+            const mesoGrad = ctx.createLinearGradient(0, leafTop + 30, 0, leafBottom - 18);
+            mesoGrad.addColorStop(0, 'rgba(20, 83, 45, 0.65)');
+            mesoGrad.addColorStop(0.6, 'rgba(15, 60, 32, 0.5)');
+            mesoGrad.addColorStop(1, 'rgba(10, 45, 25, 0.7)');
+            ctx.fillStyle = mesoGrad;
+            ctx.fillRect(w * 0.08, leafTop + 30, w * 0.84, (leafBottom - 18) - (leafTop + 30));
+
+            // 3. Central Leaf Vein (Vascular Bundle: Xylem + Phloem)
+            const veinX = w * 0.07;
+            const veinY = h * 0.52;
+            ctx.save();
+            ctx.fillStyle = 'rgba(14, 165, 233, 0.35)'; // Xylem (Water)
+            ctx.beginPath();
+            ctx.ellipse(veinX + 16, veinY - 14, 20, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.35)'; // Phloem (Sugar transport)
+            ctx.beginPath();
+            ctx.ellipse(veinX + 16, veinY + 14, 20, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#facc15';
+            ctx.stroke();
+
+            // Vein labels
+            ctx.fillStyle = '#7dd3fc';
+            ctx.font = '9px Inter, sans-serif';
+            ctx.fillText('Xylem (H₂O)', veinX - 4, veinY - 12);
+            ctx.fillStyle = '#fde047';
+            ctx.fillText('Phloem (Sugar)', veinX - 10, veinY + 16);
+            ctx.restore();
+
+            // 4. Chloroplasts in Palisade & Spongy Layers
+            for (let c of state.leafAnatomy.chloroplasts) {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.angle);
+
+                // Chloroplast capsule
+                const greenGlow = Math.min(1, c.energy / 50);
+                ctx.fillStyle = `rgb(${Math.floor(22 + 40 * greenGlow)}, ${Math.floor(163 + 60 * greenGlow)}, ${Math.floor(74 + 30 * greenGlow)})`;
+                ctx.shadowColor = '#4ade80';
+                ctx.shadowBlur = 6 + (c.energy / 10);
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, c.radiusX, c.radiusY, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner Thylakoid Stacks (Grana)
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#14532d';
+                ctx.fillRect(-10, -5, 5, 10);
+                ctx.fillRect(-2, -6, 5, 12);
+                ctx.fillRect(6, -5, 5, 10);
+
+                // Chlorophyll sheen
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.beginPath();
+                ctx.ellipse(-4, -4, c.radiusX * 0.6, c.radiusY * 0.4, -0.2, 0, Math.PI);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 5. Lower Epidermis & Stomata (Open pores for gas exchange)
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+            ctx.fillRect(w * 0.08, leafBottom - 16, w * 0.84, 16);
+
+            for (let stoma of state.leafAnatomy.stomata) {
+                // Guard cells forming the stoma pore
+                ctx.fillStyle = '#15803d';
+                // Left guard cell
+                ctx.beginPath();
+                ctx.ellipse(stoma.x - 6, stoma.y, 6, 9, 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                // Right guard cell
+                ctx.beginPath();
+                ctx.ellipse(stoma.x + 6, stoma.y, 6, 9, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Stoma pore opening (airway into leaf)
+                ctx.fillStyle = '#09150d';
+                ctx.beginPath();
+                ctx.ellipse(stoma.x, stoma.y, 3.5, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Stoma Label
+                ctx.fillStyle = '#86efac';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Stoma (CO₂ in / O₂ out)', stoma.x, stoma.y + 20);
+                ctx.textAlign = 'left';
+            }
+
+            // Layer Educational Annotations
+            ctx.fillStyle = 'rgba(209, 250, 229, 0.7)';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillText('Upper Epidermis & Cuticle', w * 0.1, leafTop - 6);
+            ctx.fillText('Palisade Mesophyll (Chloroplast-Rich Engine)', w * 0.1, leafTop + 24);
+            ctx.fillText('Spongy Mesophyll (Air Cavity for Gases)', w * 0.1, leafBottom - 26);
+
+            // Draw Dynamic Molecules
+            drawMolecules();
+        }
+
+        function drawChloroplastView() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            // Deep microscopic organelle background (Stroma matrix)
+            const grad = ctx.createRadialGradient(w * 0.5, h * 0.5, 40, w * 0.5, h * 0.5, w * 0.6);
+            grad.addColorStop(0, '#064e3b');
+            grad.addColorStop(0.7, '#022c22');
+            grad.addColorStop(1, '#011510');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Double Chloroplast Membrane Boundary
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.ellipse(w * 0.5, h * 0.5, w * 0.46, h * 0.44, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#15803d';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // STROMA Matrix Label
+            ctx.fillStyle = 'rgba(110, 231, 183, 0.5)';
+            ctx.font = 'bold 16px Inter, sans-serif';
+            ctx.fillText('CHLOROPLAST INTERIOR (STROMA FLUID)', w * 0.28, h * 0.16);
+
+            // 1. LEFT SIDE: LIGHT-DEPENDENT REACTIONS (Thylakoids & Chlorophyll)
+            const thylakoidX = w * 0.28;
+            const thylakoidY = h * 0.5;
+
+            // Thylakoid Disc Stacks (Granum)
+            ctx.save();
+            ctx.shadowColor = '#4ade80';
+            ctx.shadowBlur = 15;
+
+            for (let stack = -2; stack <= 2; stack++) {
+                const sy = thylakoidY + stack * 42;
+                for (let disc = -1; disc <= 1; disc++) {
+                    const sx = thylakoidX + disc * 28;
+                    const dGrad = ctx.createLinearGradient(sx - 20, sy - 12, sx + 20, sy + 12);
+                    dGrad.addColorStop(0, '#10b981');
+                    dGrad.addColorStop(1, '#047857');
+
+                    ctx.fillStyle = dGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy, 22, 11, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#6ee7b7';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+
+            // Label for Thylakoid
+            ctx.fillStyle = '#a7f3d0';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('1. Light Reactions', thylakoidX, thylakoidY - 115);
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillStyle = '#6ee7b7';
+            ctx.fillText('(Thylakoids + Chlorophyll)', thylakoidX, thylakoidY - 98);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText('H₂O + Sunlight ➔ O₂ + ATP', thylakoidX, thylakoidY + 115);
+
+            // Energy Bridge (ATP & NADPH arrows going from Thylakoids to Calvin Cycle)
+            ctx.save();
+            const bridgeY = h * 0.42;
+            const bridgeX = w * 0.48;
+
+            ctx.strokeStyle = '#facc15';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(thylakoidX + 50, bridgeY);
+            ctx.quadraticCurveTo(bridgeX, bridgeY - 25, w * 0.65, bridgeY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#fef08a';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.fillText('ATP & NADPH ➔', bridgeX, bridgeY - 15);
+
+            // Returning ADP + NADP+
+            ctx.strokeStyle = '#64748b';
+            ctx.beginPath();
+            ctx.moveTo(w * 0.65, bridgeY + 60);
+            ctx.quadraticCurveTo(bridgeX, bridgeY + 85, thylakoidX + 50, bridgeY + 60);
+            ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('⮌ ADP + NADP+', bridgeX, bridgeY + 70);
+            ctx.restore();
+
+            // 2. RIGHT SIDE: CALVIN CYCLE (Light-Independent Sugar Synthesis)
+            const calvinX = w * 0.72;
+            const calvinY = h * 0.5;
+            const calvinRadius = 60;
+
+            ctx.save();
+            ctx.translate(calvinX, calvinY);
+            ctx.rotate(state.chloroplastView.reactionProgress);
+
+            // Rotating Cycle Ring
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, calvinRadius, 0, Math.PI * 1.6);
+            ctx.stroke();
+
+            // Cycle Arrowhead
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(0, -calvinRadius, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Chemical enzyme nodes along cycle
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI * 0.66) {
+                const nx = Math.cos(angle) * calvinRadius;
+                const ny = Math.sin(angle) * calvinRadius;
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(nx, ny, 7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Calvin Cycle Core Labels
+            ctx.fillStyle = '#fef3c7';
+            ctx.font = 'bold 13px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('2. Calvin Cycle', calvinX, calvinY - 80);
+            ctx.font = '10px Inter, sans-serif';
+            ctx.fillStyle = '#fde68a';
+            ctx.fillText('CO₂ Fixed with RuBisCO', calvinX, calvinY - 65);
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText('Sugar Factory', calvinX, calvinY + 5);
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillText('➔ Yields Glucose (C₆H₁₂O₆)', calvinX, calvinY + 85);
+            ctx.textAlign = 'left';
+
+            // Draw Floating Zoom Molecules
+            drawMolecules();
+        }
+
+        function drawMolecules() {
+            // 1. Photons (Golden light packets)
+            for (let p of state.particles.photons) {
+                ctx.save();
+                ctx.fillStyle = '#fef08a';
+                ctx.shadowColor = '#facc15';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size || 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Photon tail streak
+                ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 2. Water Molecules (H2O: blue center oxygen with 2 little hydrogen ears)
+            for (let w of state.particles.waters) {
+                ctx.save();
+                ctx.translate(w.x, w.y);
+                // Oxygen (Blue)
+                ctx.fillStyle = '#0284c7';
+                ctx.beginPath();
+                ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                // 2 Hydrogens (White/light cyan)
+                ctx.fillStyle = '#e0f2fe';
+                ctx.beginPath();
+                ctx.arc(-3.5, -3.5, 2.5, 0, Math.PI * 2);
+                ctx.arc(3.5, -3.5, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 3. Carbon Dioxide (CO2: dark gray carbon flanked by 2 red oxygens)
+            for (let c of state.particles.co2s) {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                // Carbon (center gray)
+                ctx.fillStyle = '#64748b';
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                // Oxygens (red-orange)
+                ctx.fillStyle = '#f87171';
+                ctx.beginPath();
+                ctx.arc(-5.5, 0, 3, 0, Math.PI * 2);
+                ctx.arc(5.5, 0, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 4. Oxygen Molecules (O2 Bubbles floating up)
+            for (let o of state.particles.oxygens) {
+                ctx.save();
+                ctx.translate(o.x, o.y);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.shadowColor = '#0284c7';
+                ctx.shadowBlur = 6;
+
+                ctx.beginPath();
+                ctx.arc(0, 0, o.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Mini O2 double atom inside bubble
+                ctx.fillStyle = '#bae6fd';
+                ctx.beginPath();
+                ctx.arc(-2, 0, 2, 0, Math.PI * 2);
+                ctx.arc(2, 0, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 5. Glucose Molecules (C6H12O6: Glowing golden hexagonal sugar ring)
+            for (let g of state.particles.glucoses) {
+                ctx.save();
+                ctx.translate(g.x, g.y);
+                ctx.rotate(g.rotation);
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                ctx.strokeStyle = '#facc15';
+                ctx.lineWidth = 2;
+
+                // Draw hexagon ring
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    const hx = Math.cos(angle) * g.size;
+                    const hy = Math.sin(angle) * g.size;
+                    if (i === 0) ctx.moveTo(hx, hy);
+                    else ctx.lineTo(hx, hy);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Sweet energy center sparkle
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function simulationLoop(timestamp) {
+            spawnParticles();
+            updatePhysics();
+
+            if (state.view === 'leaf') {
+                drawLeafView();
+            } else {
+                drawChloroplastView();
+            }
+
+            requestAnimationFrame(simulationLoop);
+        }
+
+        const sunSlider = document.getElementById('sunSlider');
+        const waterSlider = document.getElementById('waterSlider');
+        const co2Slider = document.getElementById('co2Slider');
+
+        const sunValue = document.getElementById('sunValue');
+        const waterValue = document.getElementById('waterValue');
+        const co2Value = document.getElementById('co2Value');
+
+        sunSlider.addEventListener('input', (e) => {
+            state.sunlight = parseInt(e.target.value);
+            sunValue.innerText = state.sunlight + '%';
+        });
+
+        waterSlider.addEventListener('input', (e) => {
+            state.water = parseInt(e.target.value);
+            waterValue.innerText = state.water + '%';
+        });
+
+        co2Slider.addEventListener('input', (e) => {
+            state.co2 = parseInt(e.target.value);
+            co2Value.innerText = state.co2 + '%';
+        });
+
+        // View toggle buttons
+        const viewLeafBtn = document.getElementById('viewLeafBtn');
+        const viewChloroplastBtn = document.getElementById('viewChloroplastBtn');
+        const infoCardContent = document.getElementById('infoCardContent');
+        const canvasHintText = document.getElementById('canvasHintText');
+
+        function setView(viewMode) {
+            state.view = viewMode;
+            if (viewMode === 'leaf') {
+                viewLeafBtn.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-md transition-all';
+                viewChloroplastBtn.className = 'px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-900/60 transition-all';
+                canvasHintText.innerText = 'Click anywhere on the leaf to trigger photosynthetic reactions!';
+                infoCardContent.innerHTML = `
+                    <div class="p-2.5 rounded-xl bg-emerald-900/30 border border-emerald-500/20">
+                        <strong class="text-amber-300">1. Light Ingestion:</strong> Photons radiate from the sun into palisade mesophyll cells packed with green chlorophyll.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20">
+                        <strong class="text-cyan-300">2. Water Delivery:</strong> Water (H₂O) travels up the leaf's central veins (xylem) from root soil.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900/40 border border-slate-500/20">
+                        <strong class="text-slate-300">3. Air Diffusion:</strong> CO₂ enters microscopic mouth-like pores beneath the leaf called <strong>Stomata</strong>.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-yellow-950/40 border border-yellow-500/20">
+                        <strong class="text-yellow-300">4. Life Yield:</strong> Inside chloroplasts, water splits releasing fresh <strong>O₂</strong> to the atmosphere, while hydrogen and CO₂ combine into sweet <strong>Glucose</strong> sugar!
+                    </div>
+                `;
+            } else {
+                viewChloroplastBtn.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-md transition-all';
+                viewLeafBtn.className = 'px-3 py-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-900/60 transition-all';
+                canvasHintText.innerText = 'Zoomed into a single Chloroplast! Watch Thylakoids split H₂O and Calvin Cycle fix CO₂!';
+                infoCardContent.innerHTML = `
+                    <div class="p-2.5 rounded-xl bg-emerald-900/30 border border-emerald-500/20">
+                        <strong class="text-emerald-300">🔬 Thylakoid Grana:</strong> Green pancake-shaped membrane discs containing light-trapping <em>chlorophyll</em> pigments.
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/20">
+                        <strong class="text-sky-300">☀️ Light Reaction:</strong> Photons energize chlorophyll to split water (H₂O), liberating Oxygen (O₂) into the atmosphere and charging up ATP!
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-yellow-950/40 border border-yellow-500/20">
+                        <strong class="text-yellow-300">🔄 Calvin Cycle:</strong> Located in the fluid Stroma. Uses ATP energy to fix CO₂ into 6-carbon Glucose (C₆H₁₂O₆) sugar!
+                    </div>
+                `;
+            }
+        }
+
+        viewLeafBtn.addEventListener('click', () => setView('leaf'));
+        viewChloroplastBtn.addEventListener('click', () => setView('chloroplast'));
+
+        // Reset Counts
+        document.getElementById('resetStatsBtn').addEventListener('click', () => {
+            state.stats.photons = 0;
+            state.stats.water = 0;
+            state.stats.oxygen = 0;
+            state.stats.glucose = 0;
+        });
+
+        // Toggle Sound
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        soundToggleBtn.addEventListener('click', () => {
+            sound.muted = !sound.muted;
+            soundIcon.innerText = sound.muted ? '🔇' : '🔊';
+        });
+
+        // Sunburst Pulse Button
+        document.getElementById('burstSunBtn').addEventListener('click', () => {
+            sound.playSunBurst();
+            const rect = canvas.getBoundingClientRect();
+            for (let i = 0; i < 35; i++) {
+                state.particles.photons.push({
+                    x: rect.width * 0.88 + (Math.random() - 0.5) * 40,
+                    y: rect.height * 0.12,
+                    vx: (Math.random() - 0.7) * 4,
+                    vy: 2 + Math.random() * 5,
+                    size: 4 + Math.random() * 2,
+                    life: 1.0
+                });
+            }
+        });
+
+        // Night / Day Toggle
+        const nightToggleBtn = document.getElementById('nightToggleBtn');
+        nightToggleBtn.addEventListener('click', () => {
+            state.isNight = !state.isNight;
+            if (state.isNight) {
+                state.preNightSun = state.sunlight;
+                state.sunlight = 0;
+                sunSlider.value = 0;
+                sunValue.innerText = '0%';
+                nightToggleBtn.innerText = '☀️ Switch to Day';
+            } else {
+                state.sunlight = state.preNightSun || 80;
+                sunSlider.value = state.sunlight;
+                sunValue.innerText = state.sunlight + '%';
+                nightToggleBtn.innerText = '🌙 Toggle Day/Night';
+            }
+        });
+
+        // Canvas Interaction: Click or Tap to inject energized molecules directly
+        canvas.addEventListener('pointerdown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            if (state.view === 'leaf') {
+                // Check if user clicked a chloroplast to toggle zoom or boost it
+                let clickedChloroplast = false;
+                for (let c of state.leafAnatomy.chloroplasts) {
+                    const d = Math.hypot(clickX - c.x, clickY - c.y);
+                    if (d < c.radiusX * 1.5) {
+                        c.energy = 100;
+                        produceOxygen(c.x, c.y);
+                        produceGlucose(c.x, c.y);
+                        clickedChloroplast = true;
+                        break;
+                    }
+                }
+
+                if (!clickedChloroplast) {
+                    // Spawn extra burst of photons right where user clicked
+                    for (let i = 0; i < 8; i++) {
+                        state.particles.photons.push({
+                            x: clickX + (Math.random() - 0.5) * 20,
+                            y: clickY + (Math.random() - 0.5) * 20,
+                            vx: (Math.random() - 0.5) * 3,
+                            vy: (Math.random() - 0.5) * 3,
+                            size: 3.5,
+                            life: 1.0
+                        });
+                    }
+                    sound.playSunBurst();
+                }
+            } else {
+                // In chloroplast zoom: click splits water into O2 and produces Glucose
+                produceOxygen(clickX, clickY);
+                produceGlucose(clickX, clickY);
+            }
+        });
+
+        window.onload = function() {
+            resizeCanvas();
+            requestAnimationFrame(simulationLoop);
+        };
+    </script>
+</body>
+</html>
