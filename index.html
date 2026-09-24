@@ -31,10 +31,106 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top center, #132e1b 0%, #08140c 100%);
+            background:
+                radial-gradient(circle at 78% 8%, rgba(234, 179, 8, 0.14), transparent 22rem),
+                radial-gradient(circle at 12% 80%, rgba(14, 165, 233, 0.12), transparent 24rem),
+                linear-gradient(145deg, #06100b 0%, #0d2417 52%, #07131b 100%);
             color: #e2e8f0;
             overflow-x: hidden;
             user-select: none;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.28;
+            background-image:
+                linear-gradient(rgba(167, 243, 208, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167, 243, 208, 0.04) 1px, transparent 1px);
+            background-size: 42px 42px;
+            mask-image: linear-gradient(to bottom, black, transparent 78%);
+        }
+
+        .ambient-orbit {
+            position: fixed;
+            width: 18rem;
+            height: 18rem;
+            border: 1px solid rgba(163, 230, 53, 0.12);
+            border-radius: 999px;
+            pointer-events: none;
+            animation: orbitFloat 16s ease-in-out infinite;
+        }
+
+        .ambient-orbit::before,
+        .ambient-orbit::after {
+            content: '';
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #bef264;
+            box-shadow: 0 0 18px 6px rgba(190, 242, 100, 0.35);
+        }
+
+        .ambient-orbit::before { top: 12%; left: 16%; }
+        .ambient-orbit::after { right: 8%; bottom: 22%; background: #67e8f9; box-shadow: 0 0 18px 6px rgba(103, 232, 249, 0.3); }
+        .ambient-orbit.one { top: 12%; right: -7rem; }
+        .ambient-orbit.two { bottom: -8rem; left: -6rem; animation-delay: -7s; transform: rotate(62deg) scale(0.8); }
+
+        .glass-panel {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(134, 239, 172, 0.34);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+        }
+
+        header, main { position: relative; z-index: 1; }
+
+        header > div {
+            animation: revealUp 700ms cubic-bezier(.2, .8, .2, 1) both;
+        }
+
+        main > div:first-child { animation: revealUp 800ms 120ms cubic-bezier(.2, .8, .2, 1) both; }
+        main > div:last-child { animation: revealUp 800ms 220ms cubic-bezier(.2, .8, .2, 1) both; }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            transition: transform 180ms ease, background-color 180ms ease;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            width: 5rem;
+            height: 5rem;
+            right: -2rem;
+            bottom: -2rem;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: 0.06;
+            filter: blur(2px);
+        }
+
+        .stat-card:hover { transform: translateY(-3px); }
+
+        @keyframes revealUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes orbitFloat {
+            0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+            50% { transform: translate3d(-18px, 20px, 0) rotate(12deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
         }
 
         /* Glow effects */
@@ -94,6 +190,9 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between text-slate-100 p-2 sm:p-4 md:p-6 selection:bg-emerald-500 selection:text-white">
+
+    <div class="ambient-orbit one" aria-hidden="true"></div>
+    <div class="ambient-orbit two" aria-hidden="true"></div>
 
     <!-- Header & Equation Bar -->
     <header class="max-w-7xl mx-auto w-full mb-3">
@@ -193,28 +292,28 @@
 
             <!-- Molecule Live Production Counters Bar -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div class="bg-emerald-950/40 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="stat-card bg-emerald-950/40 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between text-amber-300">
                     <div>
                         <div class="text-[11px] text-amber-300/80 font-medium">Photons Caught</div>
                         <div id="statPhotons" class="text-lg font-extrabold text-amber-300">0</div>
                     </div>
                     <div class="text-2xl">☀️</div>
                 </div>
-                <div class="bg-emerald-950/40 border border-cyan-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="stat-card bg-emerald-950/40 border border-cyan-500/30 rounded-xl p-2.5 flex items-center justify-between text-cyan-300">
                     <div>
                         <div class="text-[11px] text-cyan-300/80 font-medium">Water (H₂O) Used</div>
                         <div id="statWater" class="text-lg font-extrabold text-cyan-300">0</div>
                     </div>
                     <div class="text-2xl">💧</div>
                 </div>
-                <div class="bg-emerald-950/40 border border-sky-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="stat-card bg-emerald-950/40 border border-sky-500/30 rounded-xl p-2.5 flex items-center justify-between text-sky-300">
                     <div>
                         <div class="text-[11px] text-sky-300/80 font-medium">Oxygen (O₂) Released</div>
                         <div id="statOxygen" class="text-lg font-extrabold text-sky-300">0</div>
                     </div>
                     <div class="text-2xl">🫧</div>
                 </div>
-                <div class="bg-emerald-950/40 border border-yellow-500/30 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="stat-card bg-emerald-950/40 border border-yellow-500/30 rounded-xl p-2.5 flex items-center justify-between text-yellow-300">
                     <div>
                         <div class="text-[11px] text-yellow-300/80 font-medium">Glucose (Sugar) Made</div>
                         <div id="statGlucose" class="text-lg font-extrabold text-yellow-300">0</div>
